@@ -1,0 +1,156 @@
+//Connection
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+import mongoose from "mongoose";
+
+async function connectToDb(url){
+    try{
+        const connection =  await mongoose.connect(url, {
+            useNewUrlParser: true, 
+            useUnifiedTopology: true
+        });
+        console.log("DB IS CONNECTED NOW !!");
+        return connection;
+    }
+    catch(error){
+        console.log("Error you are facing is this: ", error);
+        throw error;
+    }
+}
+
+export default connectToDb;
+
+##############################################################################################################################################################################
+
+
+
+//Controller
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+import User from "../models/userModel.js";
+
+async function handlerGetAllUsersById(req, res){
+    try{
+        const id = req.params.id;
+        console.log(`Users By ${id}`);
+        const user = await User.findById(id);
+        res.status(200).send(user);
+        if(!user){
+            return res.status(404).send({error: "Unable to find the User!"});
+        }
+    }
+    catch(error){
+        console.log(error);
+        res.status(500).send({error: "Something Broken While Fetching the User!"});
+    }
+}
+
+async function handlerGetAllUsers(req, res){
+    try{
+        console.log("All Users!!");
+        const users = await User.find({});
+        res.status(200).send(users);
+    }
+    catch(error){
+        console.log(error);
+        throw error;
+    }
+}
+
+async function handlerPostUser(req, res){
+    try{
+        const userCreated = await User.create(req.body, (err)=>{
+           if(err){
+               console.log(err);
+           }
+       });
+       console.log("User Created!");
+       res.status(201).send(userCreated);
+   }
+   catch(error){
+       console.log(error);
+       throw error;
+   }
+}
+
+async function handlerUpdateUser(req, res) {
+    res.send("User Data is Updated!");
+}
+
+async function handlerDeleteUser(req, res) {
+    res.send("User is Deleted!");
+}
+
+export { handlerGetAllUsersById, handlerGetAllUsers, handlerPostUser, handlerUpdateUser, handlerDeleteUser };
+
+###############################################################################################################################################################################
+
+
+
+//Middleware
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+import { promises as fs } from "fs";  // Use fs.promises to use async/await
+
+function middleware(filename) {
+    return async (req, res, next) => {
+        try {
+            // Log the request data to the file
+            await fs.appendFile(filename, `${req.ip} : ${req.method} : ${req.path} : ${new Date().toISOString()}\n`);
+            next();  // Move to the next middleware
+        } catch (error) {
+            console.error('Error logging request:', error);
+            next();  // Still move to the next middleware, but log the error
+        }
+    };
+}
+
+export default middleware;
+
+###############################################################################################################################################################################
+
+
+
+//Models
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+import mongoose from "mongoose";
+
+const userSchema = new mongoose.Schema({
+    firstName:{
+        type: String,
+        required: true
+    },
+    lastName:{
+        type: String
+    },
+    email:{
+        type: String,
+        required: true,
+        unique: true
+    }
+},{timestamps: true});
+
+const User = mongoose.model("User", userSchema);
+
+export default User;
+
+###############################################################################################################################################################################
+
+
+
+//Routes
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+import { handlerGetAllUsersById, handlerGetAllUsers, handlerPostUser, handlerUpdateUser, handlerDeleteUser } from "../controllers/userController.js";
+import express from "express";
+
+const router = express.Router();
+
+router.route("/:id").get(handlerGetAllUsers).patch(handlerUpdateUser).delete(handlerDeleteUser);
+
+router.route("/").get(handlerGetAllUsersById).post(handlerPostUser);
+
+export default router;
+
+###############################################################################################################################################################################

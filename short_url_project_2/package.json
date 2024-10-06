@@ -1,0 +1,16 @@
+{
+  "name": "short_url_project_2",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "nodemon index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "nanoid": "^5.0.7",
+    "nodemon": "^3.1.7"
+  }
+}
